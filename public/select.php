@@ -49,6 +49,29 @@ try {
         throw new \Exception('Access denied to this report.');
     }
 
+    // ======================================================================
+    // ✨ START: การตรวจสอบข้อมูลเพิ่มเติม
+    // ======================================================================
+
+    // 4A. ตรวจสอบว่า session_id ที่ส่งมา ตรงกับ report_id จริงหรือไม่
+    $sessionReport = $db->one('SELECT report_id FROM presentation_sessions WHERE id = ?', [$sessionId]);
+    if (!$sessionReport || (int)$sessionReport['report_id'] !== $reportId) {
+        // กรณี session ID ไม่ถูกต้อง หรือไม่ตรงกับ report ID
+        throw new \Exception('Session mismatch for this report.');
+    }
+
+    // 4B. ตรวจสอบว่าผู้ใช้เคยเลือกสำหรับ session นี้ไปแล้วหรือยัง (ป้องกันการส่งซ้ำ)
+    $existingSelection = $db->one('SELECT id FROM selections WHERE session_id = ?', [$sessionId]);
+    if ($existingSelection) {
+        // ถ้าเคยเลือกแล้ว ให้ redirect กลับไปหน้าแรกพร้อมข้อความแจ้งเตือน
+        header('Location: index.php?selection=already_exists');
+        exit;
+    }
+
+    // ======================================================================
+    // ✨ END: การตรวจสอบข้อมูลเพิ่มเติม
+    // ======================================================================
+
     // 5. Find the ID of the chosen option
     $session = $db->one(
         'SELECT A_option_id, B_option_id, C_option_id, D_option_id FROM presentation_sessions WHERE id = ?',
@@ -92,7 +115,7 @@ try {
 } catch (\Throwable $e) {
     // For a real application, you might want a more user-friendly error page
     // and to log the actual error message.
-    error_log($e->getMessage()); // Log error for debugging
+    error_log("Selection Error: " . $e->getMessage()); // Log error for debugging
     header('Location: index.php?error=processing_failed');
     exit;
 }

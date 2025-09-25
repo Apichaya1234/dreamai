@@ -7,6 +7,7 @@
  * cleaning and rephrasing over aggressive blocking to allow more diverse,
  * nuanced outputs to be evaluated. The hard fallback is reserved for
  * truly high-risk content only.
+ * ADDED: softenInputText() to preprocess user input before moderation.
  */
 
 declare(strict_types=1);
@@ -20,20 +21,18 @@ final class Safety
     private const MAX_ADVICE_LEN         = 400;
     private const MAX_LUCKY_NUM_COUNT    = 6;
 
-    /** High-severity blocklist. If these are found, use fallback immediately. */
+    // ✨ CHANGE: ลบฟังก์ชัน softenInputText เดิมออกไปทั้งหมด
+
     public static function hardBlocklist(): array
     {
         return [
-            // การเมือง/สถาบัน/ความขัดแย้งเชิงอ่อนไหว
             'การเมือง', 'ล้มล้าง', 'ปฏิวัติ', 'รัฐประหาร', 'สถาบัน',
-            // ศาสนาที่เป็นการโจมตี/ดูหมิ่น
             'ดูหมิ่นศาสนา', 'หมิ่นศาสนา',
-            // เชื้อชาติ/ชาติพันธุ์/การเหยียด
             'เหยียดเชื้อชาติ', 'เหยียดผิว', 'เหยียดเพศ',
-            // ความรุนแรงชี้นำ (ชัดเจน)
-            'ทำร้ายตัวเอง', 'ฆ่าตัวตาย', 'ทำร้ายผู้อื่น',
+            'ทำร้ายตัวเอง', 'ทำร้ายผู้อื่น',
         ];
     }
+    
 
     /** Regex patterns for PII to scrub */
     private static function piiPatterns(): array

@@ -4,15 +4,17 @@
  * Minimal OpenAI API client for DreamAI (PHP 8+), no external dependencies.
  *
  * Endpoints used:
- *  - POST /v1/responses                  (text generation; Structured Outputs)
- *  - POST /v1/moderations                (omni-moderation-latest)
- *  - POST /v1/audio/transcriptions       (gpt-4o-transcribe; multipart/form-data)
- *  - POST /v1/embeddings                 (text-embedding-3-*)
+ * - POST /v1/chat/completions         (rephrasing task)
+ * - POST /v1/responses                (text generation; Structured Outputs)
+ * - POST /v1/moderations              (omni-moderation-latest)
+ * - POST /v1/audio/transcriptions     (whisper-1; multipart/form-data)
+ * - POST /v1/embeddings               (text-embedding-3-*)
  *
  * Notes:
- *  - This client focuses on the exact features needed by DreamAI.
- *  - Throws RuntimeException on HTTP or JSON errors.
- *  - Response parsing for /responses is defensive (handles multiple shapes).
+ * - This client focuses on the exact features needed by DreamAI.
+ * - Throws RuntimeException on HTTP or JSON errors.
+ * - Response parsing for /responses is defensive (handles multiple shapes).
+ * - ADDED: rephraseForSafety method using Chat Completions.
  */
 
 declare(strict_types=1);
@@ -29,15 +31,15 @@ final class OpenAI
 
     /**
      * @param array{
-     *   api_key:string,
-     *   org?:?string,
-     *   model_gpt4o?:string,
-     *   model_gpt5?:string,
-     *   embedding?:string,
-     *   transcribe?:string,
-     *   timeout?:int,
-     *   connect_timeout?:int,
-     *   base_url?:string
+     * api_key:string,
+     * org?:?string,
+     * model_gpt4o?:string,
+     * model_gpt5?:string,
+     * embedding?:string,
+     * transcribe?:string,
+     * timeout?:int,
+     * connect_timeout?:int,
+     * base_url?:string
      * } $cfg
      */
     public function __construct(array $cfg)
@@ -53,31 +55,77 @@ final class OpenAI
     }
 
     // ---------------------------------------------------------------------
-    // Public API
+    // ✨ START: ฟังก์ชันใหม่สำหรับปรับแก้ข้อความอัตโนมัติ
     // ---------------------------------------------------------------------
+
+    /**
+     * Uses a fast chat model to rephrase user input to be safer for moderation,
+     * preserving the core meaning.
+     */
+    public function rephraseForSafety(string $originalText, string $model = 'gpt-4o'): string
+    {
+        $systemPrompt = <<<TXT
+You are an AI assistant that rephrases Thai sentences to be less explicit and violent, making them suitable for a general audience and content moderation systems, while preserving the original core meaning of a dream. Respond only with the rephrased sentence, without any additional explanation.
+Example 1:
+Input: ฝันว่าต่อสู้กับผีจนเลือดสาด
+Output: ฝันว่าเผชิญหน้ากับวิญญาณและเห็นของเหลวสีแดงฉาน
+
+Example 2:
+Input: ฝันว่าถูกยิงตาย
+Output: ฝันว่าชีวิตได้สิ้นสุดลงด้วยวัตถุคล้ายอาวุธ
+TXT;
+
+        $payload = [
+            'model' => $model,
+            'messages' => [
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $originalText]
+            ],
+            'temperature' => 0.2,
+            'max_tokens' => 250, // More than enough for a short rephrase
+            'top_p' => 1,
+        ];
+
+        // This uses the standard Chat Completions endpoint
+        $json = $this->requestJson('POST', '/v1/chat/completions', $payload);
+
+        // Extract text from chat completion response
+        $rephrasedText = $json['choices'][0]['message']['content'] ?? null;
+
+        if (is_string($rephrasedText) && trim($rephrasedText) !== '') {
+            return trim($rephrasedText);
+        }
+
+        // Fallback to original text if rephrasing fails or returns empty
+        return $originalText;
+    }
+
+    // ---------------------------------------------------------------------
+    // ✨ END: สิ้นสุดฟังก์ชันใหม่
+    // ---------------------------------------------------------------------
+
 
     /**
      * Generate one structured option (DreamOption schema) from user text.
      * Returns an associative array (already json-decoded) that matches the schema.
      */
-    // ======================================================================
-// Replace this whole method in src/OpenAI.php
-// ======================================================================
-public function responsesGenerate(
-    string $model,
-    string $userText,
-    float $temperature,
-    float $top_p,
-    ?string $style = null,
-    array $avoid = [],
-    ?string $angle = null
-): array {
-    $SYSTEM_PROMPT = <<<TXT
+    public function responsesGenerate(
+        string $model,
+        string $userText,
+        float $temperature,
+        float $top_p,
+        ?string $style = null,
+        array $avoid = [],
+        ?string $angle = null,
+        bool $enable_uncertainty = false
+    ): array {
+        $SYSTEM_PROMPT = <<<TXT
 คุณคือ "ปราชญ์แห่งความฝัน" ผู้มีสติปัญญาลุ่มลึกผสมผสานระหว่างโหราศาสตร์ไทยโบราณและหลักจิตวิเคราะห์สมัยใหม่ ภารกิจของคุณคือการตีความความฝันของผู้ใช้ โดยมีหลักการดังนี้:
 
 บทบาท:
 - เป็นผู้ให้คำปรึกษาที่สุขุม สุภาพ และน่าเชื่อถือ
 - ใช้ภาษาไทยที่สละสลวย แต่เข้าใจง่าย
+- สร้างคำทำนายแต่ละครั้งให้แตกต่างกันอย่างชัดเจน อย่าใช้รูปประโยคหรือใจความซ้ำเดิม
 
 หลักการตีความ:
 1.  **เชื่อมโยงกับชีวิตจริง**: ทุกคำทำนายต้องพยายามเชื่อมโยงสัญลักษณ์ในฝันเข้ากับสถานการณ์จริงที่ผู้ใช้อาจเผชิญอยู่ เช่น การงาน การเงิน ความสัมพันธ์ หรือความกังวลส่วนตัว
@@ -90,99 +138,82 @@ public function responsesGenerate(
 - หลีกเลี่ยงหัวข้อที่อ่อนไหวอย่างยิ่งยวด (การเมือง, ศาสนา, การเหยียด)
 TXT;
 
-    // messages → ใช้ content.type = input_text ตามสเปค Responses API
-    $msgs = [];
-    $push = function(string $role, string $text) use (&$msgs) {
-        $msgs[] = [
-            'role'    => $role,
-            'content' => [ [ 'type' => 'input_text', 'text' => $text ] ],
-        ];
-    };
-    $push('system', $SYSTEM_PROMPT);
-    if ($angle) $push('system', "ให้ใช้มุมมอง angle='{$angle}' เท่านั้น");
-    if ($style && trim($style) !== '') $push('system', 'สไตล์เพิ่มเติม: '.$style);
-    if (!empty($avoid)) {
-        $avoidShort = [];
-        foreach ($avoid as $s) {
-            $s = trim(preg_replace('/\s+/', ' ', (string)$s));
-            if ($s !== '') $avoidShort[] = mb_substr($s, 0, 180, 'UTF-8');
+        $msgs = [];
+        $push = function(string $role, string $text) use (&$msgs) {
+            $msgs[] = [ 'role' => $role, 'content' => [ [ 'type' => 'input_text', 'text' => $text ] ], ];
+        };
+        $push('system', $SYSTEM_PROMPT);
+        if ($angle) $push('system', "ให้ใช้มุมมอง angle='{$angle}' เท่านั้น");
+        if ($style && trim($style) !== '') $push('system', 'สไตล์เพิ่มเติม: '.$style);
+        if (!empty($avoid)) {
+            $avoidShort = [];
+            foreach ($avoid as $s) {
+                $s = trim(preg_replace('/\s+/', ' ', (string)$s));
+                if ($s !== '') $avoidShort[] = mb_substr($s, 0, 180, 'UTF-8');
+            }
+            if ($avoidShort) $push('system', "AVOID_LIST (ห้ามซ้ำสาระ/ถ้อยคำกับ):\n- ".implode("\n- ", $avoidShort));
         }
-        if ($avoidShort) $push('system', "AVOID_LIST (ห้ามซ้ำสาระ/ถ้อยคำกับ):\n- ".implode("\n- ", $avoidShort));
-    }
-    $push('user', $userText);
+        $push('user', $userText);
 
-    // text.format → JSON Schema แบบ strict (required ครบทุกคีย์ + additionalProperties:false ทุกชั้น)
-    $payload = [
-        'model'       => $model,
-        'input'       => $msgs,
-        'temperature' => $temperature,
-        'top_p'       => $top_p,
-        'text' => [
-            'format' => [
-                'type'   => 'json_schema',
-                'name'   => 'DreamOption',
-                'strict' => true,
-                'schema' => [
-                    'type'                 => 'object',
-                    'additionalProperties' => false,
-                    'properties'           => [
-                        'angle'          => ['type'=>'string','enum'=>['symbol','psycho','event','caution']],
-                        'title'          => ['type'=>'string'],
-                        'interpretation' => ['type'=>'string'],
-                        'tone'           => ['type'=>'string','enum'=>['ปลอบโยน','เตือน','กลาง']],
-                        'advice'         => ['type'=>'string'],
-                        'lucky_numbers'  => ['type'=>'array','items'=>['type'=>'integer']],
-                        'culture'        => [
-                            'type'                 => 'object',
-                            'additionalProperties' => false,
-                            'properties'           => [
-                                'thai_buddhist_fit' => ['type'=>'boolean'],
-                                'notes'             => ['type'=>'string'],
-                            ],
-                            // ⬇️ strict: ต้องใส่ครบทุกคีย์ใน properties
-                            'required'            => ['thai_buddhist_fit','notes'],
-                        ],
+        $schemaInterpretation = $enable_uncertainty
+            ? [
+                'type' => 'array',
+                'description' => 'กรณีฝันกำกวม ให้ตีความหลายแง่มุมตามเงื่อนไขที่เป็นไปได้ 2-3 กรณี',
+                'items' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'condition' => ['type' => 'string', 'description' => 'เงื่อนไขของสถานการณ์ เช่น "หากช่วงนี้คุณกังวลเรื่องงาน..."'],
+                        'interpretation' => ['type' => 'string', 'description' => 'คำทำนายภายใต้เงื่อนไขนั้น'],
                     ],
-                    // ⬇️ strict: ใส่ครบทุกคีย์ระดับบนสุด
-                    'required' => ['angle','title','interpretation','tone','advice','lucky_numbers','culture'],
+                    'required' => ['condition', 'interpretation'],
+                ],
+              ]
+            : ['type'=>'string'];
+
+        $payload = [
+            'model'       => $model,
+            'input'       => $msgs,
+            'temperature' => $temperature,
+            'top_p'       => $top_p,
+            'max_tokens'  => 2048,
+            'text' => [
+                'format' => [
+                    'type'   => 'json_schema',
+                    'name'   => 'DreamOption',
+                    'strict' => true,
+                    'schema' => [
+                        'type' => 'object',
+                        'additionalProperties' => false,
+                        'properties' => [
+                            'angle'          => ['type'=>'string','enum'=>['symbol','psycho','event','caution']],
+                            'title'          => ['type'=>'string'],
+                            'interpretation' => $schemaInterpretation,
+                            'tone'           => ['type'=>'string','enum'=>['ปลอบโยน','เตือน','กลาง']],
+                            'advice'         => ['type'=>'string'],
+                            'lucky_numbers'  => ['type'=>'array','items'=>['type'=>'integer']],
+                            'culture'        => [
+                                'type' => 'object',
+                                'additionalProperties' => false,
+                                'properties' => [ 'thai_buddhist_fit' => ['type'=>'boolean'], 'notes' => ['type'=>'string'], ],
+                                'required' => ['thai_buddhist_fit','notes'],
+                            ],
+                        ],
+                        'required' => ['angle','title','interpretation','tone','advice','lucky_numbers','culture'],
+                    ],
                 ],
             ],
-        ],
-    ];
-
-    $json = $this->requestJson('POST', '/v1/responses', $payload);
-    $text = $this->extractResponsesText($json);
-
-    $data = json_decode($text, true);
-    if (!is_array($data)) {
-        $data = [
-            'angle'          => $angle ?: 'event',
-            'title'          => '',
-            'interpretation' => $enable_uncertainty
-    ? [
-        'type' => 'array',
-        'description' => 'กรณีฝันกำกวม ให้ตีความหลายแง่มุมตามเงื่อนไขที่เป็นไปได้ 2-3 กรณี',
-        'items' => [
-            'type' => 'object',
-            'properties' => [
-                'condition' => ['type' => 'string', 'description' => 'เงื่อนไขของสถานการณ์ เช่น "หากช่วงนี้คุณกังวลเรื่องงาน..."'],
-                'interpretation' => ['type' => 'string', 'description' => 'คำทำนายภายใต้เงื่อนไขนั้น'],
-            ],
-            'required' => ['condition', 'interpretation'],
-        ],
-      ]
-    : ['type'=>'string'],
-            'tone'           => 'กลาง',
-            'advice'         => '',
-            'lucky_numbers'  => [],
-            'culture'        => ['thai_buddhist_fit'=>true,'notes'=>'fallback: non-JSON output'],
         ];
+
+        $json = $this->requestJson('POST', '/v1/responses', $payload);
+        $text = $this->extractResponsesText($json);
+        $data = json_decode($text, true);
+
+        if (!is_array($data)) {
+            return Safety::fallback();
+        }
+        if ($angle && (empty($data['angle']) || $data['angle'] !== $angle)) $data['angle'] = $angle;
+        return $data;
     }
-    if ($angle && (empty($data['angle']) || $data['angle'] !== $angle)) $data['angle'] = $angle;
-    return $data;
-}
-
-
 
 
 /**

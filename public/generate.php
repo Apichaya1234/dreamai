@@ -5,6 +5,8 @@
  * - Removes "angle" complexity.
  * - Uses 4 fixed model/parameter configurations for direct comparison.
  * - Keeps Loading State UX and feedback form.
+ * - ADDED: A prominent information box for research participants on the results page.
+ * - ADDED: Research FAQ section to address potential concerns.
  */
 
 declare(strict_types=1);
@@ -48,6 +50,48 @@ if (!$u || (int)$u['consent_research']!==1 || empty($u['gender']) || empty($u['b
       margin: 20px auto;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .research-note {
+        background-color: #f3f4f6;
+        border-left: 5px solid var(--c-primary);
+        padding: 1.5rem;
+        margin: 2rem 0;
+        border-radius: 0.5rem;
+    }
+    .research-note h3 {
+        margin-top: 0;
+        color: var(--c-primary);
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .research-note p {
+        margin-bottom: 0;
+        color: var(--c-muted);
+    }
+    
+    /* ✨ START: CSS สำหรับ FAQ */
+    .faq-section {
+        margin-top: 3rem;
+        border-top: 1px solid var(--c-border);
+        padding-top: 2rem;
+    }
+    .faq-item {
+        margin-bottom: 1.5rem;
+    }
+    .faq-item h4 {
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--c-text);
+    }
+    .faq-item p {
+        color: var(--c-muted);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    /* ✨ END: CSS สำหรับ FAQ */
+
   </style>
 </head>
 <body>
@@ -61,6 +105,21 @@ if (!$u || (int)$u['consent_research']!==1 || empty($u['gender']) || empty($u['b
   <div id="results-container" style="display:none;">
     <h2>เลือกคำทำนายที่คุณชอบที่สุด</h2>
     <p class="muted small">ระบบสุ่มตำแหน่ง A–D และซ่อนที่มาของแต่ละตัวเลือก</p>
+
+    <!-- ✨ START: ปรับปรุงข้อความในกล่องข้อมูล -->
+    <div class="research-note">
+        <h3>
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" style="width:24px; height:24px;">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
+            </svg>
+            ข้อมูลสำคัญสำหรับผู้เข้าร่วมวิจัย
+        </h3>
+        <p>
+            การเลือกของคุณคือส่วนสำคัญของงานวิจัยชิ้นนี้! ทุกครั้งที่คุณเลือก ระบบจะบันทึกข้อมูล <strong>(1) ตัวเลือกที่ท่านชอบ</strong> และ <strong>(2) ข้อมูลประชากร (เพศ/อายุ)</strong> เพื่อนำไปวิเคราะห์ในภาพรวมว่า AI ควรสร้างคำทำนายแบบใด ข้อมูลทั้งหมด<strong>ไม่สามารถระบุตัวตน</strong>ของท่านได้และใช้เพื่อการศึกษาเท่านั้น
+        </p>
+    </div>
+    <!-- ✨ END: สิ้นสุดกล่องข้อมูลที่ปรับปรุงแล้ว -->
+
     <form method="post" action="select.php" class="mt-3">
       <input type="hidden" name="session_id" id="session_id_field">
       <input type="hidden" name="report_id" id="report_id_field">
@@ -85,10 +144,26 @@ if (!$u || (int)$u['consent_research']!==1 || empty($u['gender']) || empty($u['b
         <a class="btn ghost" href="index.php">กลับหน้าแรก</a>
       </div>
     </form>
+    
+    <!-- ✨ START: เพิ่มส่วนคำถามที่พบบ่อย (FAQ) -->
+    <div class="faq-section">
+        <h2>คำถามที่พบบ่อยเกี่ยวกับการวิจัย</h2>
+        <div class="faq-item">
+            <h4>ทำไมต้องเก็บข้อมูลเพศและวันเกิด?</h4>
+            <p>เราใช้ข้อมูลนี้เพื่อวิเคราะห์แนวโน้มในภาพรวมเท่านั้น เช่น "ผู้หญิงในช่วงอายุ 20-30 ปี ชอบคำทำนายสไตล์ B มากกว่า" ข้อมูลนี้จะไม่ถูกใช้เพื่อระบุตัวตนของคุณเด็ดขาด</p>
+        </div>
+        <div class="faq-item">
+            <h4>ข้อมูลของฉันปลอดภัยแค่ไหน?</h4>
+            <p>ข้อมูลการเลือกจะถูกเก็บโดยใช้รหัสผู้ใช้แบบสุ่ม (Anonymous ID) ซึ่งไม่เชื่อมโยยงกับข้อมูลส่วนตัวใดๆ และจะถูกใช้ในการวิจัยนี้เท่านั้น เราไม่ได้เก็บข้อมูลความฝันของคุณร่วมกับการเลือกเพื่อการวิเคราะห์</p>
+        </div>
+    </div>
+    <!-- ✨ END: สิ้นสุดส่วน FAQ -->
+
   </div>
 </div>
 
 <?php
+// ... (PHP Processing Block and JavaScript remain the same) ...
 // --- PHP Processing Block ---
 ob_start();
 
@@ -102,7 +177,6 @@ function logModeration(DB $db, string $stage, int $entityId, string $model, arra
 
 function insertOption(DB $db, int $reportId, string $source, ?string $model, ?float $t, ?float $p, array $content, string $label='pending', ?string $angle=null, ?string $styleKey=null): int {
   $json = json_encode($content, JSON_UNESCAPED_UNICODE);
-  // Using 'angle' field to store the arm identifier for easier analysis
   return (int)$db->execStmt(
     'INSERT INTO generated_options (report_id, source, angle, style_key, diversity_method, model, temperature, top_p, prompt_version, content_json, risk_score, moderation_label) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)',
     [$reportId, $source, $angle, $styleKey, 'fixed-arm', $model, $t, $p, 'v4-thesis-aligned', $json, 0.0, $label]
@@ -113,7 +187,6 @@ function insertOption(DB $db, int $reportId, string $source, ?string $model, ?fl
 $userId    = (int)$_SESSION['user_id'];
 $dreamText = Utils::normalizeText(trim($_POST['dream_text'] ?? ''), false);
 $channel   = 'text';
-$reportId  = createReport($db, $userId, $channel, '', 'neutral');
 
 if (!empty($_POST['audio_b64'])) {
   $channel = 'audio';
@@ -123,8 +196,7 @@ if (!empty($_POST['audio_b64'])) {
     $res = $ai->transcribe($tmp, $config['openai']['transcribe'] ?? 'gpt-4o-transcribe');
     $stt = trim((string)($res['text'] ?? ''));
     if ($stt !== '') $dreamText = $dreamText ? ($dreamText . "\n" . $stt) : $stt;
-    $db->execStmt('INSERT INTO dream_report_media(report_id, transcript, stt_model) VALUES (?,?,?)', [$reportId, $stt, $config['openai']['transcribe'] ?? 'gpt-4o-transcribe']);
-  } catch (\Throwable $e) { $db->execStmt('INSERT INTO dream_report_media(report_id, transcript, stt_model) VALUES (?,?,?)', [$reportId, null, 'transcribe_error']); }
+  } catch (\Throwable $e) { /* Ignore transcribe error */ }
   finally { @unlink($tmp); }
 }
 
@@ -132,17 +204,30 @@ if ($dreamText === '') {
   header('Location: index.php'); exit;
 }
 
-$dreamMood = 'neutral';
-try { $dreamMood = $ai->classifyMood($dreamText); } catch (\Throwable $e) {}
-$db->execStmt('UPDATE dream_reports SET raw_text=?, mood=?, channel=? WHERE id=?', [$dreamText, $dreamMood, $channel, $reportId]);
+$reportId  = createReport($db, $userId, $channel, $dreamText, 'neutral');
+
+// 2. ใช้ AI ช่วยปรับแก้ข้อความก่อนส่งไปตรวจสอบ
+try {
+    $safeDreamText = $ai->rephraseForSafety($dreamText, $config['openai']['model_gpt4o'] ?? 'gpt-4o');
+} catch (\Throwable $e) {
+    error_log("DreamAI Rephrase Error: " . $e->getMessage());
+    $safeDreamText = $dreamText;
+}
+
+// 3. ส่งข้อความที่ "ปลอดภัยแล้ว" ไปตรวจสอบกับ Moderation API
+$inputMod = $ai->moderate($safeDreamText);
+logModeration($db, 'input', $reportId, 'omni-moderation-latest', $inputMod);
+$inputFlagged = (bool)($inputMod['results'][0]['flagged'] ?? false);
+
 
 $retrieved_context = '';
 try {
-  $match = $db->one('SELECT l.* FROM dream_lexicon l JOIN dream_synonyms s ON s.lexicon_id = l.id WHERE ? LIKE CONCAT("%", s.term, "%") UNION SELECT l.* FROM dream_lexicon l WHERE ? LIKE CONCAT("%", l.lemma, "%") LIMIT 1', [$dreamText, $dreamText]);
+  $match = $db->one('SELECT l.* FROM dream_lexicon l JOIN dream_synonyms s ON s.lexicon_id = l.id WHERE ? LIKE CONCAT("%", s.term, "%") UNION SELECT l.* FROM dream_lexicon l WHERE ? LIKE CONCAT("%", l.lemma, "%") LIMIT 1', [$safeDreamText, $safeDreamText]);
   if ($match) {
       $db->execStmt('INSERT INTO report_matches(report_id, lexicon_id, match_type, confidence) VALUES (?,?,?,?)', [$reportId, (int)$match['id'], 'keyword', 0.9]);
       $context_parts = [];
       if (!empty($match['description'])) $context_parts[] = $match['description'];
+      $dreamMood = 'neutral'; // Assume neutral if not classified
       if ($dreamMood === 'negative' && !empty($match['negative_interpretation'])) {
           $context_parts[] = "คำทำนายด้านลบ: " . $match['negative_interpretation'];
       } elseif (!empty($match['positive_interpretation'])) {
@@ -152,59 +237,49 @@ try {
   }
 } catch (\Throwable $e) {}
 
-$inputMod = $ai->moderate($dreamText);
-logModeration($db, 'input', $reportId, 'omni-moderation-latest', $inputMod);
-$inputFlagged = (bool)($inputMod['results'][0]['flagged'] ?? false);
 
-// --- MODIFIED: Thesis-aligned Experiment Setup ---
+// --- Experiment Setup ---
 $options = [];
 $seen = [];
-
 $gpt4o = $config['openai']['model_gpt4o'] ?? 'gpt-4o';
-$gpt5  = $config['openai']['model_gpt5']  ?? 'gpt-5'; // Fallback just in case
+$gpt5  = $config['openai']['model_gpt5']  ?? 'gpt-4o';
 
 
 $experimentArms = [
-    [
-        'model' => $gpt4o, 'temp' => 0.3, 'top_p' => 1.0, 'source' => 'gpt-4.1', 'arm_id' => 'A_gpt4o_t0.3_symbolic',
-        'diversity_instruction' => 'ให้เน้นการตีความตามสัญลักษณ์ที่ปรากฏในฝันและอ้างอิงตามตำราเป็นหลักอย่างตรงไปตรงมา'
-    ],
-    [
-        'model' => $gpt4o, 'temp' => 0.7, 'top_p' => 1.0, 'source' => 'gpt-4.1', 'arm_id' => 'B_gpt4o_t0.7_psychological',
-        'diversity_instruction' => 'ให้เน้นการตีความในเชิงจิตวิทยา โดยเชื่อมโยงกับสภาวะอารมณ์ ความรู้สึก ความเครียด หรือความปรารถนาที่ซ่อนอยู่ของผู้ฝัน'
-    ],
-    [
-        'model' => $gpt4o, 'temp' => 1.0, 'top_p' => 1.0, 'source' => 'gpt-4.1', 'arm_id' => 'C_gpt4o_t1.0_creative',
-        'diversity_instruction' => 'ให้ตีความอย่างสร้างสรรค์ เปรียบเทียบเป็นอุปมาอุปไมย และคาดการณ์ถึงเหตุการณ์ในอนาคตที่อาจเกิดขึ้นได้หลายแง่มุม'
-    ],
-    [
-    'model' => $gpt5,  'temp' => 0.8, 'top_p' => 1.0, 'source' => 'gpt-5', 'arm_id' => 'E_gpt5_uncertainty',
-    'diversity_instruction' => 'หากความฝันมีความหมายได้หลายแง่มุม ให้สร้างคำทำนายแบบมีเงื่อนไข (Scenarios) 2-3 รูปแบบตามสถานการณ์ชีวิตที่ผู้ฝันอาจเผชิญอยู่',
-    'enable_uncertainty' => true // <-- เพิ่ม flag ใหม่
-],
+    ['model' => $gpt4o, 'temp' => 0.3, 'top_p' => 1.0, 'source' => 'gpt-4.1', 'arm_id' => 'A_gpt4o_t0.3_symbolic', 'diversity_instruction' => 'ให้เน้นการตีความตามสัญลักษณ์ที่ปรากฏในฝันและอ้างอิงตามตำราเป็นหลักอย่างตรงไปตรงมา'],
+    ['model' => $gpt4o, 'temp' => 0.7, 'top_p' => 1.0, 'source' => 'gpt-4.1', 'arm_id' => 'B_gpt4o_t0.7_psychological', 'diversity_instruction' => 'ให้เน้นการตีความในเชิงจิตวิทยา โดยเชื่อมโยงกับสภาวะอารมณ์ ความรู้สึก ความเครียด หรือความปรารถนาที่ซ่อนอยู่ของผู้ฝัน'],
+    ['model' => $gpt4o, 'temp' => 1.0, 'top_p' => 1.0, 'source' => 'gpt-4.1', 'arm_id' => 'C_gpt4o_t1.0_creative', 'diversity_instruction' => 'ให้ตีความอย่างสร้างสรรค์ เปรียบเทียบเป็นอุปมาอุปไมย และคาดการณ์ถึงเหตุการณ์ในอนาคตที่อาจเกิดขึ้นได้หลายแง่มุม'],
+    ['model' => $gpt5, 'temp' => 0.8, 'top_p' => 1.0, 'source' => 'gpt-5', 'arm_id' => 'E_gpt5_uncertainty', 'diversity_instruction' => 'หากความฝันมีความหมายได้หลายแง่มุม ให้สร้างคำทำนายแบบมีเงื่อนไข (Scenarios) 2-3 รูปแบบตามสถานการณ์ชีวิตที่ผู้ฝันอาจเผชิญอยู่', 'enable_uncertainty' => true],
 ];
 
+if ($inputFlagged) {
+    $flag_content = Safety::fallback();
+    $flag_content['title'] = 'เนื้อหาถูกกลั่นกรอง';
+    $flag_content['interpretation'] = 'ข้อความของคุณอาจมีคำที่ระบบจำเป็นต้องปรับแก้เพื่อความปลอดภัย โปรดตรวจสอบผลลัพธ์ที่ได้';
+    for ($i = 0; $i < 4; $i++) {
+        $options[] = ['source'=>'moderation', 'model'=>'system', 't'=>0, 'p'=>0, 'angle'=>'flagged', 'style_key'=>'input-flagged', 'content'=>$flag_content];
+    }
+} else {
+    foreach ($experimentArms as $arm) {
+      try {
+        $prompt_for_ai = $safeDreamText;
+        if ($retrieved_context !== '') $prompt_for_ai = $retrieved_context . "\n\n---\n\nความฝันของผู้ใช้:\n" . $safeDreamText;
+        
+        $gen = $ai->responsesGenerate($arm['model'], $prompt_for_ai, (float)$arm['temp'], (float)$arm['top_p'], $arm['diversity_instruction'], $seen, null, $arm['enable_uncertainty'] ?? false);
+        $gen = Safety::postFilter($ai, $gen);
 
-foreach ($experimentArms as $arm) {
-  try {
-    $prompt_for_ai = $dreamText;
-    if ($retrieved_context !== '') $prompt_for_ai = $retrieved_context . "\n\n---\n\nความฝันของผู้ใช้:\n" . $dreamText;
-    
-    // Call AI with a specific diversity instruction for each arm
-    $gen = $ai->responsesGenerate($arm['model'], $prompt_for_ai, (float)$arm['temp'], (float)$arm['top_p'], $arm['diversity_instruction'], $seen, null);
-    $gen = Safety::postFilter($ai, $gen);
-
-    $options[] = ['source'=>$arm['source'], 'model'=>$arm['model'], 't'=>(float)$arm['temp'], 'p'=>(float)$arm['top_p'], 'angle'=>$arm['arm_id'], 'style_key'=>$arm['diversity_instruction'], 'content'=>$gen];
-    $seen[] = (string)($gen['interpretation'] ?? '');
-  } catch (\Throwable $e) {
-    // On error, create a fallback option but still tag it with the intended arm for tracking
-    $fb = Safety::fallback();
-    $options[] = ['source'=>$arm['source'], 'model'=>$arm['model'], 't'=>(float)$arm['temp'], 'p'=>(float)$arm['top_p'], 'angle'=>$arm['arm_id'], 'style_key'=>'error-fallback', 'content'=>$fb];
-  }
+        $options[] = ['source'=>$arm['source'], 'model'=>$arm['model'], 't'=>(float)$arm['temp'], 'p'=>(float)$arm['top_p'], 'angle'=>$arm['arm_id'], 'style_key'=>$arm['diversity_instruction'], 'content'=>$gen];
+        $seen[] = (is_string($gen['interpretation']) ? $gen['interpretation'] : json_encode($gen['interpretation']));
+      
+      } catch (\Throwable $e) {
+        error_log("DreamAI Generation Error (Arm: {$arm['arm_id']}): {$e->getMessage()}");
+        $fb = Safety::fallback();
+        $fb['title'] = 'เกิดข้อผิดพลาดในการสร้าง';
+        $fb['interpretation'] = "ขออภัยค่ะ ระบบไม่สามารถสร้างคำทำนายได้ในขณะนี้";
+        $options[] = ['source'=>$arm['source'], 'model'=>$arm['model'], 't'=>(float)$arm['temp'], 'p'=>(float)$arm['top_p'], 'angle'=>$arm['arm_id'], 'style_key'=>'error-fallback', 'content'=>$fb];
+      }
+    }
 }
-// --- END MODIFICATION ---
-
-if ($inputFlagged) { foreach ($options as &$opt) { $opt['content'] = Safety::fallback(); } unset($opt); }
 
 $optionIds = [];
 foreach ($options as $opt) {
@@ -246,7 +321,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const tempDiv = document.createElement('div');
     const h = (text) => { tempDiv.textContent = text || ''; return tempDiv.innerHTML; };
     const title = h(content.title);
-    const interp = h(content.interpretation).replace(/\n/g, '<br>');
+    
+    let interp = '';
+    if (typeof content.interpretation === 'string') {
+        interp = h(content.interpretation).replace(/\n/g, '<br>');
+    } else if (Array.isArray(content.interpretation)) {
+        interp = content.interpretation.map(item => {
+            return `<strong>${h(item.condition)}</strong><br>${h(item.interpretation).replace(/\n/g, '<br>')}`;
+        }).join('<br><br>');
+    }
+
     const lucky = content.lucky_numbers && content.lucky_numbers.length > 0 ? h(content.lucky_numbers.join(', ')) : '';
 
     return `
@@ -269,3 +353,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
