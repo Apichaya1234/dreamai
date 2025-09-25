@@ -36,12 +36,12 @@ final class DB
      */
     public function __construct(array $cfg)
     {
-        $host    = $cfg['host']    ?? 'localhost';
+        $host    = $cfg['host']    ?? '';
         $port    = (string)($cfg['port'] ?? '3306');
-        $dbname  = $cfg['name']    ?? 'if0_40017174_dreamai';
+        $dbname  = $cfg['name']    ?? '';
         $charset = $cfg['charset'] ?? 'utf8mb4';
-        $user    = $cfg['user']    ?? 'if0_40017174';
-        $pass    = $cfg['pass']    ?? 'FmVs4Jc68y0f';
+        $user    = $cfg['user']    ?? '';
+        $pass    = $cfg['pass']    ?? '';
 
         $dsn = "mysql:host={$host};port={$port};dbname={$dbname};charset={$charset}";
 

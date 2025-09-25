@@ -14,11 +14,11 @@ $envInt = fn(string $key, ?int $default = null) => \DreamAI\Env::getInt($key, $d
 /**
  * Database configuration
  */
-$dbHost = $env('DB_HOST', '127.0.0.1');
+$dbHost = $env('DB_HOST', 'localhost');
 $dbPort = $envInt('DB_PORT', 3306);
 $dbName = $env('DB_NAME', 'dreamai');
-$dbUser = $env('DB_USER', 'root');
-$dbPass = $env('DB_PASS', '');
+$dbUser = $env('DB_USER', 'dreamAi');
+$dbPass = $env('DB_PASS', 'OnW5HER7AWp9@aNz');
 
 /**
  * OpenAI configuration
@@ -26,7 +26,7 @@ $dbPass = $env('DB_PASS', '');
 $openAiApiKey   = $env('OPENAI_API_KEY', '');
 $openAiOrg      = $env('OPENAI_ORG', null);
 $modelGpt4o     = $env('MODEL_GPT4O', 'gpt-4o');
-$modelGpt5      = $env('MODEL_GPT5', 'gpt-4o'); // fallback if gpt-5 unavailable
+$modelGpt5      = $env('MODEL_GPT5', 'gpt-5'); // fallback if gpt-5 unavailable
 $embeddingModel = $env('EMBEDDING_MODEL', 'text-embedding-3-small');
 $transcribeModel= $env('TRANSCRIBE_MODEL', 'gpt-4o-transcribe');
 
