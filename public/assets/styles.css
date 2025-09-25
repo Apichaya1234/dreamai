@@ -1,0 +1,308 @@
+/* ==========================================================================
+   DreamAI — public/assets/styles.css
+   Minimal, dependency-free UI kit for the demo app
+   - System fonts
+   - Responsive layout
+   - Accessible focus styles
+   - Light/Dark support (prefers-color-scheme)
+   ========================================================================== */
+
+/* ---- CSS Reset (lightweight) ------------------------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html { line-height: 1.5; -webkit-text-size-adjust: 100%; }
+
+body, h1, h2, h3, h4, p, figure, blockquote, dl, dd { margin: 0; }
+
+ul[role="list"], ol[role="list"] { list-style: none; }
+
+body { min-height: 100vh; }
+
+/* ---- Design Tokens ----------------------------------------------------- */
+:root{
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, "Helvetica Neue", Arial, "Noto Sans Thai", "Noto Sans", sans-serif;
+  --radius-xs: 8px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --shadow-1: 0 1px 2px rgba(0,0,0,.06), 0 1px 1px rgba(0,0,0,.04);
+  --shadow-2: 0 8px 24px rgba(0,0,0,.08);
+
+  /* Light */
+  --c-bg: #ffffff;
+  --c-surface: #ffffff;
+  --c-muted: #6b7280;
+  --c-text: #111827;
+  --c-border: #e5e7eb;
+  --c-border-strong: #d1d5db;
+  --c-primary: #111827;
+  --c-primary-contrast: #ffffff;
+  --c-focus: #2563eb;
+  --c-ok: #065f46;
+  --c-warn: #b45309;
+  --c-danger: #991b1b;
+  --c-badge: #f9fafb;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+}
+
+/* Dark scheme (auto) */
+@media (prefers-color-scheme: dark) {
+  :root{
+    --c-bg: #0b0f18;
+    --c-surface: #0f1625;
+    --c-muted: #9aa3b2;
+    --c-text: #e5e7eb;
+    --c-border: #1f2a3b;
+    --c-border-strong: #263247;
+    --c-primary: #e5e7eb;
+    --c-primary-contrast: #0b0f18;
+    --c-focus: #60a5fa;
+    --c-ok: #34d399;
+    --c-warn: #f59e0b;
+    --c-danger: #f87171;
+    --c-badge: #111827;
+    --shadow-1: 0 1px 2px rgba(0,0,0,.35), 0 1px 1px rgba(0,0,0,.25);
+    --shadow-2: 0 8px 24px rgba(0,0,0,.4);
+  }
+}
+
+/* ---- Base -------------------------------------------------------------- */
+body{
+  font-family: var(--font-sans);
+  color: var(--c-text);
+  background: linear-gradient(180deg,var(--c-bg) 0%, var(--c-bg) 70%, rgba(2,6,23,0.02) 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img{ max-width: 100%; display: block; }
+a{ color: inherit; }
+hr{ border: none; border-top: 1px solid var(--c-border); margin: var(--space-6) 0; }
+
+/* ---- Typography -------------------------------------------------------- */
+h1{ font-size: clamp(24px, 3vw, 32px); font-weight: 700; letter-spacing: -.01em; margin-bottom: var(--space-2); }
+h2{ font-size: clamp(18px, 2.2vw, 24px); font-weight: 700; margin: var(--space-3) 0; }
+h3{ font-size: clamp(16px, 2vw, 20px); font-weight: 700; margin-bottom: var(--space-2); }
+p{ font-size: 16px; line-height: 1.7; }
+
+.small{ font-size: 12px; }
+.muted{ color: var(--c-muted); }
+
+/* ---- Layout ------------------------------------------------------------ */
+.container{
+  max-width: 960px;
+  margin: var(--space-6) auto;
+  padding: 0 var(--space-4);
+  animation: fadeIn .2s ease-out;
+}
+
+.card{
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-1);
+}
+
+.card.elevated{ box-shadow: var(--shadow-2); }
+
+.grid{
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: var(--space-3);
+}
+@media (max-width: 1024px){
+  .grid{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (max-width: 560px){
+  .grid{ grid-template-columns: 1fr; }
+}
+
+/* ---- Badges & Chips ---------------------------------------------------- */
+.badge{
+  display: inline-block;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-badge);
+  color: var(--c-muted);
+}
+
+/* ---- Buttons ----------------------------------------------------------- */
+.btn{
+  appearance: none;
+  user-select: none;
+  cursor: pointer;
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-surface);
+  color: var(--c-text);
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  transition: transform .02s ease, background .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+.btn:hover{ background: rgba(17,24,39,0.02); }
+.btn:active{ transform: translateY(1px); }
+.btn:disabled{ opacity: .6; cursor: not-allowed; }
+
+.btn.primary{
+  background: var(--c-primary);
+  color: var(--c-primary-contrast);
+  border-color: var(--c-primary);
+}
+.btn.primary:hover{ filter: brightness(1.05); }
+.btn.primary:active{ transform: translateY(1px) scale(.99); }
+
+.btn.ghost{
+  background: transparent;
+  border-color: var(--c-border);
+}
+
+.btn.danger{
+  border-color: var(--c-danger);
+  color: var(--c-danger);
+}
+.btn.danger:hover{ background: rgba(220, 38, 38, .06); }
+
+/* Button group utility */
+.btn-group{ display: flex; gap: var(--space-3); flex-wrap: wrap; }
+
+/* ---- Forms ------------------------------------------------------------- */
+label{ display:block; margin: var(--space-3) 0 var(--space-2); font-weight: 600; }
+
+input[type="text"],
+input[type="file"],
+textarea,
+select{
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-xs);
+  background: var(--c-surface);
+  color: var(--c-text);
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+}
+
+textarea{ min-height: 120px; resize: vertical; }
+
+input::file-selector-button{
+  border: 1px solid var(--c-border-strong);
+  background: var(--c-badge);
+  padding: 8px 10px;
+  margin-right: var(--space-3);
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+}
+
+input:focus,
+textarea:focus,
+select:focus{
+  border-color: var(--c-focus);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-focus) 20%, transparent);
+}
+
+input[type="radio"],
+input[type="checkbox"]{
+  width: 1rem; height: 1rem; vertical-align: middle; margin-right: 8px;
+}
+
+/* Inline radio group */
+.radio-inline{ display:flex; gap: var(--space-4); align-items:center; }
+
+/* ---- Tables (used in installer report too) ---------------------------- */
+.table{
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+.table th,
+.table td{
+  border: 1px solid var(--c-border);
+  padding: 8px 10px;
+  vertical-align: top;
+}
+.table th{ background: rgba(0,0,0,.03); text-align: left; }
+
+.kv{ display: grid; grid-template-columns: 160px 1fr; gap: 8px 16px; }
+
+/* ---- Alerts ------------------------------------------------------------ */
+.alert{
+  border: 1px solid var(--c-border);
+  background: var(--c-badge);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+}
+.alert.ok{ border-color: color-mix(in srgb, var(--c-ok) 40%, var(--c-border)); }
+.alert.warn{ border-color: color-mix(in srgb, var(--c-warn) 40%, var(--c-border)); }
+.alert.danger{ border-color: color-mix(in srgb, var(--c-danger) 40%, var(--c-border)); }
+
+/* ---- Footer text ------------------------------------------------------- */
+.footer{ color: var(--c-muted); font-size: 12px; margin-top: var(--space-3); }
+
+/* ---- Utilities --------------------------------------------------------- */
+.text-center{ text-align: center; }
+.mt-1{ margin-top: var(--space-1); }
+.mt-2{ margin-top: var(--space-2); }
+.mt-3{ margin-top: var(--space-3); }
+.mt-4{ margin-top: var(--space-4); }
+.mt-6{ margin-top: var(--space-6); }
+.mb-2{ margin-bottom: var(--space-2); }
+.mb-3{ margin-bottom: var(--space-3); }
+.mb-4{ margin-bottom: var(--space-4); }
+.gap-2{ gap: var(--space-2); }
+.gap-3{ gap: var(--space-3); }
+.flex{ display:flex; }
+.flex-col{ flex-direction: column; }
+.items-center{ align-items: center; }
+.justify-between{ justify-content: space-between; }
+
+/* Screen-reader only text */
+.sr-only{
+  position: absolute !important; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip: rect(0,0,0,0); white-space: nowrap; border:0;
+}
+
+/* ---- Focus visibility (keyboard users) -------------------------------- */
+:focus-visible{
+  outline: 2px solid var(--c-focus);
+  outline-offset: 2px;
+}
+
+/* ---- Animations -------------------------------------------------------- */
+@keyframes fadeIn{
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Cards used in options grid --------------------------------------- */
+.card .title{
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+.card p + p{ margin-top: var(--space-2); }
+
+/* ---- Helper for option blocks ----------------------------------------- */
+.option{
+  display:flex; flex-direction:column; gap: var(--space-2);
+}
+.option .meta{ display:flex; align-items:center; gap: var(--space-2); }
+
+/* ---- Print (minimal) --------------------------------------------------- */
+@media print{
+  .btn, .footer { display: none !important; }
+  .card{ box-shadow: none; border-color: #bbb; }
+}
