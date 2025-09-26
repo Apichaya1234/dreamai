@@ -17,8 +17,8 @@ $envInt = fn(string $key, ?int $default = null) => \DreamAI\Env::getInt($key, $d
 $dbHost = $env('DB_HOST', 'localhost');
 $dbPort = $envInt('DB_PORT', 3306);
 $dbName = $env('DB_NAME', 'dreamai');
-$dbUser = $env('DB_USER', 'dreamAi');
-$dbPass = $env('DB_PASS', 'OnW5HER7AWp9@aNz');
+$dbUser = $env('DB_USER', 'root');
+$dbPass = $env('DB_PASS', '');
 
 /**
  * OpenAI configuration

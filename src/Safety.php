@@ -15,9 +15,10 @@ namespace DreamAI;
 
 final class Safety
 {
-    private const MAX_TITLE_LEN          = 80;
-    private const MAX_INTERPRET_LEN      = 800;
-    private const MAX_ADVICE_LEN         = 400;
+    // --- การเปลี่ยนแปลง: เพิ่มความยาวสูงสุดของข้อความ ---
+    private const MAX_TITLE_LEN          = 100;
+    private const MAX_INTERPRET_LEN      = 1500;
+    private const MAX_ADVICE_LEN         = 800;
     private const MAX_LUCKY_NUM_COUNT    = 6;
 
     /** High-severity blocklist. If these are found, use fallback immediately. */
@@ -49,6 +50,7 @@ final class Safety
     public static function fallback(): array
     {
         return [
+            'angle'          => 'event', // เพิ่ม angle เริ่มต้น
             'title'          => 'คำแนะนำทั่วไป',
             'interpretation' => 'ความฝันนี้อาจสะท้อนความคิด ความกังวล หรือเหตุการณ์ในแต่ละวันของคุณ โดยไม่จำเป็นต้องเป็นลางบอกเหตุ',
             'tone'           => 'กลาง',
@@ -93,6 +95,7 @@ final class Safety
     public static function sanitizeOption(array $opt): array
     {
         $out = [
+            'angle'          => self::asString($opt['angle'] ?? 'event'),
             'title'          => self::asString($opt['title'] ?? ''),
             'interpretation' => self::asString($opt['interpretation'] ?? ''),
             'tone'           => self::asString($opt['tone'] ?? 'กลาง'),
@@ -179,7 +182,7 @@ final class Safety
         if ($s === '' || mb_strlen($s, 'UTF-8') <= $max) return $s;
         $cut = mb_substr($s, 0, $max, 'UTF-8');
         $pos = max(mb_strrpos($cut, '।'), mb_strrpos($cut, '.'), mb_strrpos($cut, '!', 0, 'UTF-8'), mb_strrpos($cut, '?', 0, 'UTF-8'));
-        if ($pos !== false) {
+        if ($pos !== false && $pos > ($max - 100)) { // ตัดที่ประโยคสุดท้ายถ้ามันอยู่ไม่ไกลจากจุดตัดมากนัก
             return rtrim(mb_substr($cut, 0, $pos + 1, 'UTF-8'));
         }
         return rtrim($cut) . '…';

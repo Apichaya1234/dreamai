@@ -244,22 +244,19 @@ $hasApiKey = !empty($config['openai']['api_key']);
     <?php if ($profileComplete): ?>
         <div class="card">
             <h2><span style="font-size: 1.2em;">✨</span> ใส่ความฝันของคุณ</h2>
-            <p class="muted">พิมพ์ความฝันของคุณ หรือกดปุ่ม "ไมโครโฟน" เพื่อเล่าความฝัน</p>
-            <?php if (!$hasApiKey): ?>
-                <div class="alert warn" role="alert"><strong>ข้อผิดพลาด:</strong> ยังไม่ได้ตั้งค่า OPENAI_API_KEY ในระบบ</div>
-            <?php endif; ?>
+            <p class="muted">พิมพ์ความฝันของคุณ เพื่อเล่าความฝัน</p>
             <form id="dreamForm" method="post" action="generate.php">
                 <div class="input-group">
                     <label for="dream_text">เรื่องราวในความฝัน</label>
                     <textarea id="dream_text" name="dream_text" placeholder="เช่น ฝันว่ากำลังวิ่งอยู่ในทุ่งดอกไม้ที่ไม่มีที่สิ้นสุด..." maxlength="5000" rows="5"></textarea>
                 </div>
-                <div class="input-group">
+                <!--div class="input-group">
                     <label>เล่าความฝันด้วยเสียง</label>
                     <div style="display: flex; align-items: center; gap: 1rem;">
                         <button type="button" class="btn ghost" id="btnMic">🎙️ เริ่มอัดเสียง</button>
                         <span class="muted" id="micStatus">ยังไม่ได้อัดเสียง</span>
                     </div>
-                </div>
+                </div-->
                 <input type="hidden" name="audio_b64" id="audio_b64">
                 <input type="hidden" name="audio_mime" id="audio_mime" value="audio/webm">
                 <div class="btn-group">

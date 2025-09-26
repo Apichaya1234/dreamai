@@ -48,6 +48,42 @@ if (!$u || (int)$u['consent_research']!==1 || empty($u['gender']) || empty($u['b
       margin: 20px auto;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    /* START: Styles for Research Info Box with Dark Mode support */
+    :root {
+      --research-border-color: #1d4ed8;
+      --research-bg-color: #eff6ff;
+      --research-header-color: #1e3a8a;
+      --research-details-bg-color: #dbeafe;
+      --research-details-border-color: #bfdbfe;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --research-border-color: #60a5fa; /* A brighter blue, matches --c-focus */
+        --research-bg-color: #1e293b; /* A dark blue-gray, Tailwind slate-800 */
+        --research-header-color: #93c5fd; /* A light blue, Tailwind blue-300 */
+        --research-details-bg-color: #283447; /* A slightly lighter dark bg */
+        --research-details-border-color: #374151; /* A gray border, Tailwind gray-700 */
+      }
+    }
+
+    .research-info {
+      border-left-width: 4px;
+      border-left-style: solid;
+      border-left-color: var(--research-border-color);
+      background-color: var(--research-bg-color);
+    }
+    .research-info h3 {
+      color: var(--research-header-color);
+    }
+    .research-info details > div {
+      background-color: var(--research-details-bg-color);
+    }
+    .research-info details hr {
+      border-color: var(--research-details-border-color);
+    }
+    /* END: Styles for Research Info Box */
   </style>
 </head>
 <body>
@@ -61,6 +97,35 @@ if (!$u || (int)$u['consent_research']!==1 || empty($u['gender']) || empty($u['b
   <div id="results-container" style="display:none;">
     <h2>เลือกคำทำนายที่คุณชอบที่สุด</h2>
     <p class="muted small">ระบบสุ่มตำแหน่ง A–D และซ่อนที่มาของแต่ละตัวเลือก</p>
+
+    <!-- START: กล่องข้อมูลงานวิจัย (เวอร์ชันทางการ) -->
+    <div class="card research-info" style="margin-top: 1.5rem;">
+      <h3>
+        คำชี้แจงสำหรับผู้เข้าร่วมโครงการวิจัย
+      </h3>
+      
+      <div style="font-size: 0.9rem; margin-top: 0.75rem;">
+        <h4>วัตถุประสงค์ของโครงการวิจัย:</h4>
+        <p>โครงการวิจัยนี้มีวัตถุประสงค์เพื่อศึกษาและเปรียบเทียบประสิทธิภาพของแบบจำลองปัญญาประดิษฐ์ (AI Models) ในการตีความความฝันเชิงสัญลักษณ์</p>
+        
+        <h4 style="margin-top: 1rem;">บทบาทของผู้เข้าร่วมวิจัย:</h4>
+        <p>การตัดสินใจเลือกคำทำนายที่ท่านพึงพอใจที่สุดในขั้นตอนนี้ จะถูกใช้เป็นข้อมูลสำคัญในการประเมินว่าแบบจำลองใดสามารถสร้างสรรค์คำทำนายได้ตรงกับความคาดหวังของผู้ใช้ได้ดีที่สุด ซึ่งจะนำไปสู่การพัฒนาระบบให้มีคุณภาพต่อไป</p>
+        <p style="margin-top: 0.5rem;">ทางผู้จัดทำขอขอบคุณท่านที่สละเวลาให้ความร่วมมือในโครงการวิจัยนี้</p>
+      </div>
+      
+      <details style="margin-top: 1rem; font-size: 0.85rem;">
+        <summary style="cursor: pointer; font-weight: 600;">ข้อมูลเพิ่มเติมสำหรับผู้เข้าร่วมวิจัย</summary>
+        <div style="padding: 0.75rem; margin-top: 0.5rem; border-radius: 8px;">
+          <p><strong>หลักการปกปิดข้อมูล (Blinding):</strong><br>
+          ในขั้นตอนนี้ ท่านจะไม่ทราบว่าคำทำนายแต่ละตัวเลือก (A, B, C, D) ถูกสร้างขึ้นจากแบบจำลอง AI ใด ซึ่งเป็นกระบวนการมาตรฐานเพื่อป้องกันอคติ (Bias) และทำให้ผลการประเมินมีความน่าเชื่อถือสูงสุด</p>
+          <hr style="margin: 0.75rem 0;">
+          <p><strong>การคุ้มครองข้อมูลส่วนบุคคล:</strong><br>
+          ข้อมูลที่ท่านให้กับระบบ ทั้งเนื้อหาความฝันและตัวเลือกที่ท่านตัดสินใจ จะถูกประมวลผลในรูปแบบที่ไม่สามารถระบุตัวตนของท่านได้ (Anonymous Data) และจะถูกนำไปใช้เพื่อการวิเคราะห์เชิงสถิติสำหรับงานวิจัยนี้เท่านั้น</p>
+        </div>
+      </details>
+    </div>
+    <!-- END: กล่องข้อมูลงานวิจัย -->
+
     <form method="post" action="select.php" class="mt-3">
       <input type="hidden" name="session_id" id="session_id_field">
       <input type="hidden" name="report_id" id="report_id_field">
@@ -123,8 +188,8 @@ if (!empty($_POST['audio_b64'])) {
     $res = $ai->transcribe($tmp, $config['openai']['transcribe'] ?? 'gpt-4o-transcribe');
     $stt = trim((string)($res['text'] ?? ''));
     if ($stt !== '') $dreamText = $dreamText ? ($dreamText . "\n" . $stt) : $stt;
-    $db->execStmt('INSERT INTO dream_report_media(report_id, transcript, stt_model) VALUES (?,?,?)', [$reportId, $stt, $config['openai']['transcribe'] ?? 'gpt-4o-transcribe']);
-  } catch (\Throwable $e) { $db->execStmt('INSERT INTO dream_report_media(report_id, transcript, stt_model) VALUES (?,?,?)', [$reportId, null, 'transcribe_error']); }
+    $db->execStmt('INSERT INTO dream_report_media(report_id, transcript, st_model) VALUES (?,?,?)', [$reportId, $stt, $config['openai']['transcribe'] ?? 'gpt-4o-transcribe']);
+  } catch (\Throwable $e) { $db->execStmt('INSERT INTO dream_report_media(report_id, transcript, st_model) VALUES (?,?,?)', [$reportId, null, 'transcribe_error']); }
   finally { @unlink($tmp); }
 }
 
@@ -204,7 +269,9 @@ foreach ($experimentArms as $arm) {
 }
 // --- END MODIFICATION ---
 
-if ($inputFlagged) { foreach ($options as &$opt) { $opt['content'] = Safety::fallback(); } unset($opt); }
+// --- การเปลี่ยนแปลง: ลบการตรวจสอบ $inputFlagged ที่จะแทนที่ทุกคำตอบ ---
+// เราจะปล่อยให้การตรวจสอบผลลัพธ์ (output moderation) จัดการความปลอดภัยทีละรายการแทน
+// if ($inputFlagged) { foreach ($options as &$opt) { $opt['content'] = Safety::fallback(); } unset($opt); }
 
 $optionIds = [];
 foreach ($options as $opt) {
@@ -215,7 +282,10 @@ foreach ($options as $opt) {
     logModeration($db, 'output', $id, 'omni-moderation-latest', $omod);
     $flag = (int)($omod['results'][0]['flagged'] ?? 0);
     $db->execStmt('UPDATE generated_options SET moderation_label=? WHERE id=?', [$flag?'flagged':'safe', $id]);
-    if ($flag) $db->execStmt('UPDATE generated_options SET content_json=? WHERE id=?', [json_encode(Safety::fallback(), JSON_UNESCAPED_UNICODE), $id]);
+    if ($flag) {
+        // หากผลลัพธ์อันใดอันหนึ่งไม่ปลอดภัย ให้แทนที่เฉพาะอันนั้นด้วย fallback
+        $db->execStmt('UPDATE generated_options SET content_json=? WHERE id=?', [json_encode(Safety::fallback(), JSON_UNESCAPED_UNICODE), $id]);
+    }
   } catch (\Throwable $e) { $db->execStmt('UPDATE generated_options SET moderation_label=? WHERE id=?', ['safe', $id]); }
   $optionIds[] = $id;
 }
@@ -246,7 +316,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tempDiv = document.createElement('div');
     const h = (text) => { tempDiv.textContent = text || ''; return tempDiv.innerHTML; };
     const title = h(content.title);
-    const interp = h(content.interpretation).replace(/\n/g, '<br>');
+    const interp = Array.isArray(content.interpretation) 
+      ? content.interpretation.map(item => `<strong>${h(item.condition)}</strong><br>${h(item.interpretation)}`).join('<hr style="margin: 0.5rem 0; border-color: #e5e7eb;">')
+      : h(content.interpretation).replace(/\n/g, '<br>');
+
     const lucky = content.lucky_numbers && content.lucky_numbers.length > 0 ? h(content.lucky_numbers.join(', ')) : '';
 
     return `
@@ -269,3 +342,5 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
+
