@@ -15,6 +15,7 @@ use DreamAI\DB;
 use DreamAI\OpenAI;
 use DreamAI\Safety;
 use DreamAI\Utils;
+use DreamAI\Embeddings; 
 
 // --- Start session and validation ---
 session_start();
@@ -22,6 +23,7 @@ if (!isset($_SESSION['user_id'])) { header('Location: index.php'); exit; }
 
 $db = new DB($config['db']);
 $ai = new OpenAI($config['openai']);
+$embeddings = new Embeddings($ai, $db);
 
 $u = $db->one('SELECT consent_research, gender, birth_date FROM users WHERE id=?', [$_SESSION['user_id']]);
 if (!$u || (int)$u['consent_research']!==1 || empty($u['gender']) || empty($u['birth_date'])) {
@@ -200,22 +202,53 @@ if ($dreamText === '') {
 $dreamMood = 'neutral';
 try { $dreamMood = $ai->classifyMood($dreamText); } catch (\Throwable $e) {}
 $db->execStmt('UPDATE dream_reports SET raw_text=?, mood=?, channel=? WHERE id=?', [$dreamText, $dreamMood, $channel, $reportId]);
-
+// ======================================================================
+// ✨ START: RAG powered by Semantic Search
+// ======================================================================
 $retrieved_context = '';
 try {
-  $match = $db->one('SELECT l.* FROM dream_lexicon l JOIN dream_synonyms s ON s.lexicon_id = l.id WHERE ? LIKE CONCAT("%", s.term, "%") UNION SELECT l.* FROM dream_lexicon l WHERE ? LIKE CONCAT("%", l.lemma, "%") LIMIT 1', [$dreamText, $dreamText]);
-  if ($match) {
-      $db->execStmt('INSERT INTO report_matches(report_id, lexicon_id, match_type, confidence) VALUES (?,?,?,?)', [$reportId, (int)$match['id'], 'keyword', 0.9]);
-      $context_parts = [];
-      if (!empty($match['description'])) $context_parts[] = $match['description'];
-      if ($dreamMood === 'negative' && !empty($match['negative_interpretation'])) {
-          $context_parts[] = "คำทำนายด้านลบ: " . $match['negative_interpretation'];
-      } elseif (!empty($match['positive_interpretation'])) {
-          $context_parts[] = "คำทำนายด้านบวก: " . $match['positive_interpretation'];
-      }
-      if ($context_parts) $retrieved_context = "ข้อมูลอ้างอิงจากตำรา: " . implode(' | ', $context_parts);
-  }
-} catch (\Throwable $e) {}
+    // 1. Use the Embeddings helper to find the most similar symbols.
+    // This single call replaces the entire tokenization and looping logic.
+    $matches = $embeddings->getSimilarSymbols($dreamText, 3);
+
+    if ($matches) {
+        $context_parts = [];
+        
+        foreach ($matches as $match) {
+            // Log the match to the database.
+            $db->execStmt('INSERT INTO report_matches(report_id, lexicon_id, match_type, confidence) VALUES (?,?,?,?)', [$reportId, (int)$match['id'], 'embedding', 0.98]);
+            
+            // 2. Aggregate context from the semantically similar results.
+            $symbol_context = "สัญลักษณ์ '{$match['lemma']}' (มีความหมายใกล้เคียง)";
+            $interpretations = [];
+
+            if (!empty($match['description'])) $interpretations[] = $match['description'];
+            if ($dreamMood === 'negative' && !empty($match['negative_interpretation'])) {
+                $interpretations[] = "ด้านลบ: " . $match['negative_interpretation'];
+            } elseif (!empty($match['positive_interpretation'])) {
+                $interpretations[] = "ด้านบวก: " . $match['positive_interpretation'];
+            }
+            
+            if ($interpretations) {
+                 $symbol_context .= ": " . implode(' | ', $interpretations);
+            }
+            $context_parts[] = "- " . $symbol_context;
+        }
+
+        // 3. Create the synthesis prompt for the LLM.
+        if ($context_parts) {
+            $retrieved_context = "ข้อมูลอ้างอิงเชิงความหมายจากตำรา: สังเคราะห์ความหมายของสัญลักษณ์ที่ใกล้เคียงต่อไปนี้ และพิจารณาบริบทของเรื่องราวความฝันทั้งหมดเพื่อสร้างเป็นคำทำนายที่สอดคล้องกัน\n" . implode("\n", $context_parts);
+        }
+    }
+    // The "Lexicon Expansion" (learning new words) part would now evolve.
+    // Instead of learning keywords, it would learn from user feedback on which interpretations
+    // were most helpful, potentially fine-tuning the embedding model in the future.
+} catch (\Throwable $e) {
+    error_log("Semantic RAG Error: " . $e->getMessage());
+}
+// ======================================================================
+// ✨ END: Semantic RAG
+// ======================================================================
 
 $inputMod = $ai->moderate($dreamText);
 logModeration($db, 'input', $reportId, 'omni-moderation-latest', $inputMod);
@@ -341,3 +374,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
