@@ -226,8 +226,7 @@ $options = [];
 $seen = [];
 
 $gpt4o = $config['openai']['model_gpt4o'] ?? 'gpt-4o';
-$gpt5  = $config['openai']['model_gpt5']  ?? 'gpt-5'; // Fallback just in case
-
+$gpt_advanced = $config['openai']['model_advanced'] ?? 'gpt-4.1-turbo'; // Using a more descriptive config key
 
 $experimentArms = [
     [
@@ -243,10 +242,11 @@ $experimentArms = [
         'diversity_instruction' => 'ให้ตีความอย่างสร้างสรรค์ เปรียบเทียบเป็นอุปมาอุปไมย และคาดการณ์ถึงเหตุการณ์ในอนาคตที่อาจเกิดขึ้นได้หลายแง่มุม'
     ],
     [
-    'model' => $gpt5,  'temp' => 0.8, 'top_p' => 1.0, 'source' => 'gpt-5', 'arm_id' => 'E_gpt5_uncertainty',
-    'diversity_instruction' => 'หากความฝันมีความหมายได้หลายแง่มุม ให้สร้างคำทำนายแบบมีเงื่อนไข (Scenarios) 2-3 รูปแบบตามสถานการณ์ชีวิตที่ผู้ฝันอาจเผชิญอยู่',
-    'enable_uncertainty' => true // <-- เพิ่ม flag ใหม่
-],
+        // ** CORRECTED ARM DEFINITION TO MATCH DATABASE AND THESIS **
+        'model' => $gpt_advanced, 'temp' => 0.8, 'top_p' => 1.0, 'source' => 'gpt-4.1', 'arm_id' => 'E_gpt4.1_t0.8_uncertainty',
+        'diversity_instruction' => 'หากความฝันมีความหมายได้หลายแง่มุม ให้สร้างคำทำนายแบบมีเงื่อนไข (Scenarios) 2-3 รูปแบบตามสถานการณ์ชีวิตที่ผู้ฝันอาจเผชิญอยู่',
+        'enable_uncertainty' => true
+    ],
 ];
 
 
@@ -269,8 +269,7 @@ foreach ($experimentArms as $arm) {
 }
 // --- END MODIFICATION ---
 
-// --- การเปลี่ยนแปลง: ลบการตรวจสอบ $inputFlagged ที่จะแทนที่ทุกคำตอบ ---
-// เราจะปล่อยให้การตรวจสอบผลลัพธ์ (output moderation) จัดการความปลอดภัยทีละรายการแทน
+// --- We will let output moderation handle safety on a case-by-case basis ---
 // if ($inputFlagged) { foreach ($options as &$opt) { $opt['content'] = Safety::fallback(); } unset($opt); }
 
 $optionIds = [];
@@ -283,7 +282,7 @@ foreach ($options as $opt) {
     $flag = (int)($omod['results'][0]['flagged'] ?? 0);
     $db->execStmt('UPDATE generated_options SET moderation_label=? WHERE id=?', [$flag?'flagged':'safe', $id]);
     if ($flag) {
-        // หากผลลัพธ์อันใดอันหนึ่งไม่ปลอดภัย ให้แทนที่เฉพาะอันนั้นด้วย fallback
+        // If a specific output is unsafe, replace only that one with a fallback
         $db->execStmt('UPDATE generated_options SET content_json=? WHERE id=?', [json_encode(Safety::fallback(), JSON_UNESCAPED_UNICODE), $id]);
     }
   } catch (\Throwable $e) { $db->execStmt('UPDATE generated_options SET moderation_label=? WHERE id=?', ['safe', $id]); }
@@ -342,5 +341,3 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
-
-
