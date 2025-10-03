@@ -248,4 +248,9 @@ CREATE TABLE IF NOT EXISTS moderation_logs (
   INDEX idx_moderation_flagged (flagged)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+ALTER TABLE `dream_lexicon`
+ADD COLUMN `embedding` BLOB NULL DEFAULT NULL
+AFTER `source_tag`;
+
 -- END OF FILE
+
